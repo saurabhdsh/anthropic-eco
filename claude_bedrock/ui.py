@@ -18,8 +18,8 @@ def console() -> Console:
 def banner(out: Console) -> None:
     body = Text.from_markup(
         "[bold]Claude  ×  Amazon Bedrock[/bold]\n"
-        "The same access SEAL uses on this EC2.\n"
-        "[dim]WeaveEC2BedrockRole  ·  Messages API  ·  no API key[/dim]"
+        "A live session from this machine.\n"
+        "[dim]Instance role  ·  Messages API  ·  no API key[/dim]"
     )
     out.print(Panel(body, border_style="bright_cyan", padding=(1, 2)))
 

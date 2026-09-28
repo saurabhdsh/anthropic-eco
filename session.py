@@ -98,17 +98,20 @@ def build_stage(out, region: str, offline: bool) -> tuple[Stage, int]:
         out.print(Panel(explain_error(exc), title="Stage check", border_style="red"))
         return Stage(out, region, None, None, False), 1
 
-    on_seal_role = ROLE_NAME in identity["arn"]
-    check = Table(title="Stage check  ·  SEAL access", header_style="bold")
+    on_expected_role = ROLE_NAME in identity["arn"]
+    check = Table(title="Stage check", header_style="bold")
     check.add_column("Piece")
     check.add_column("Value")
     check.add_row("Account", identity["account"])
     check.add_row("Caller", identity["arn"])
-    check.add_row("SEAL role", ROLE_NAME if on_seal_role else f"{ROLE_NAME}  (this caller is a different principal)")
+    check.add_row(
+        "Instance role",
+        ROLE_NAME if on_expected_role else f"{ROLE_NAME}  (this caller is a different principal)",
+    )
     check.add_row("Region", region)
     check.add_row("Model", primary)
-    check.add_row("Fast model", fast or "not set — SEAL uses the one Sonnet id")
-    check.add_row("Credential", "Instance role. ANTHROPIC_API_KEY is empty, same as SEAL.")
+    check.add_row("Fast model", fast or "not set — this session uses one Sonnet id")
+    check.add_row("Credential", "Instance role. No API key in this repo.")
     out.print(check)
     return Stage(out, region, primary, fast, False, client(region), Meter(), identity), 0
 
@@ -143,7 +146,7 @@ def main() -> int:
         out.print(Panel("\n".join(stage.meter.notes), title="Calls", border_style="dim"))
     else:
         out.print("[dim]No live calls on this run.[/dim]")
-    out.print("[dim]Open examples/seal_messages.py when someone asks for the smallest version.[/dim]")
+    out.print("[dim]Open examples/simple_message.py when someone asks for the smallest version.[/dim]")
     return 0
 
 

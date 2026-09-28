@@ -1,6 +1,6 @@
 """One typed message to Claude on Bedrock.
 
-Run on the SEAL EC2:
+Run on the EC2 host:
 
     python examples/simple_message.py
 
@@ -9,7 +9,7 @@ The instance role is the credential. There is no API key.
 
 from anthropic import AnthropicBedrock
 
-# Same access SEAL uses.
+# Bedrock in us-east-1. The instance role is the credential.
 REGION = "us-east-1"
 MODEL_ID = "us.anthropic.claude-sonnet-4-5-20250929-v1:0"
 

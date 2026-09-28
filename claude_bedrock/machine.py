@@ -44,5 +44,5 @@ def snapshot(region: str) -> dict:
         "region": region,
         "availability_zone": availability_zone or "not on EC2",
         "instance_id": instance_id or "not on EC2",
-        "credential": "IAM role WeaveEC2BedrockRole. Same role SEAL uses. No API key.",
+        "credential": "IAM instance role. No API key in this repo.",
     }

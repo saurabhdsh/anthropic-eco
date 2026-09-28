@@ -29,9 +29,9 @@ CLASSROOM_RATES: dict[str, dict[str, float | str]] = {
 
 SURFACES = [
     (
-        "SEAL on this EC2",
-        "IAM role WeaveEC2BedrockRole",
-        "AnthropicBedrock messages.create. This session runs the same call.",
+        "This EC2 host",
+        "IAM instance role",
+        "AnthropicBedrock messages.create. This session runs this call.",
     ),
     (
         "Claude.ai, Desktop, Claude Code",

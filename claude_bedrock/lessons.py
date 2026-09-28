@@ -19,7 +19,7 @@ from claude_bedrock.catalog import (
     family_of,
 )
 from claude_bedrock.runtime import Meter, Usage, complete, explain_error, stream_text
-from claude_bedrock.seal_access import JOBS, MODEL_ID, ROLE_NAME
+from claude_bedrock.seal_access import MODEL_ID, ROLE_NAME
 from claude_bedrock.ui import say, show_json, usage_line
 
 
@@ -50,8 +50,8 @@ def ecosystem(stage: Stage) -> None:
     say(
         stage.out,
         "Claude is one model family behind several front doors. "
-        "SEAL already calls it from this EC2: AnthropicBedrock, role "
-        f"{ROLE_NAME}, model {MODEL_ID}. This session makes that same call.",
+        "This session calls it from this EC2 through AnthropicBedrock. "
+        f"The instance role is {ROLE_NAME}. The model is {MODEL_ID}.",
     )
     surfaces = Table(title="Where Claude shows up", header_style="bold")
     surfaces.add_column("Surface")
@@ -84,9 +84,9 @@ def ecosystem(stage: Stage) -> None:
 def hello(stage: Stage) -> None:
     say(
         stage.out,
-        "SEAL's BedrockProvider builds one Messages request: model, system, messages, max_tokens. "
+        "One Claude request is a model, a system prompt, a messages list, and max_tokens. "
         "The Python client is AnthropicBedrock(aws_region=...). "
-        "ANTHROPIC_API_KEY stays empty. The role signs the call.",
+        "The instance role signs the call. There is no API key.",
     )
     payload = {
         "aws_region": stage.region,
@@ -96,7 +96,7 @@ def hello(stage: Stage) -> None:
         "system": HELLO_SYSTEM,
         "messages": [{"role": "user", "content": HELLO_USER}],
     }
-    show_json(stage.out, "messages.create  ·  same shape as SEAL", payload)
+    show_json(stage.out, "messages.create", payload)
     show_json(
         stage.out,
         "InvokeModel body  ·  the raw AWS form of that request",
@@ -105,8 +105,8 @@ def hello(stage: Stage) -> None:
 
     if stage.offline or stage.runtime is None or not stage.primary:
         stage.out.print(Panel(
-            "Claude is Anthropic's model family. SEAL reaches it with WeaveEC2BedrockRole. "
-            "There is no API key in the SEAL server.",
+            "Claude is Anthropic's model family. This EC2 reaches it with the instance role. "
+            "There is no API key in this repo.",
             title="Offline sample",
             border_style="green",
         ))
@@ -234,7 +234,7 @@ def tools(stage: Stage) -> None:
         machine = {
             "hostname": "rehearsal",
             "region": stage.region,
-            "credential": f"IAM role {ROLE_NAME}. No API key in SEAL or in this repo.",
+            "credential": f"IAM role {ROLE_NAME}. No API key in this repo.",
         }
         sonnet = estimate_cost("sonnet", 8000, 1000)
         show_json(stage.out, "tool inspect_machine", machine)
@@ -322,12 +322,16 @@ def structured(stage: Stage) -> None:
     stage.guard("Structured", _call)
 
 
-def _job_table(model_id: str) -> Table:
-    table = Table(title="SEAL jobs on one Bedrock model", header_style="bold")
+def _model_table(model_id: str) -> Table:
+    table = Table(title="One model id, several jobs", header_style="bold")
     table.add_column("Job")
     table.add_column("What it does")
     table.add_column("Model id")
-    for name, purpose in JOBS:
+    for name, purpose in (
+        ("Chat", "A person asks a question"),
+        ("Classification", "Label a batch of short texts"),
+        ("Summary", "Condense a long document"),
+    ):
         table.add_row(name, purpose, model_id)
     return table
 
@@ -335,11 +339,11 @@ def _job_table(model_id: str) -> Table:
 def families(stage: Stage) -> None:
     say(
         stage.out,
-        "Haiku, Sonnet, and Opus are the families. SEAL does not switch among them. "
-        "Question generation, evaluation, and the critic all use one Sonnet inference profile, "
-        f"signed by {ROLE_NAME}.",
+        "Haiku, Sonnet, and Opus are the families. This session uses one Sonnet id for chat, "
+        "classification, and summaries. You switch families by changing the model id. "
+        f"The instance role is {ROLE_NAME}.",
     )
-    stage.out.print(_job_table(stage.primary or MODEL_ID))
+    stage.out.print(_model_table(stage.primary or MODEL_ID))
     prompt = "Write a one-line git commit message for adding Bedrock streaming to a Python service."
     system = "Reply with the commit message only."
     if not stage.fast and (stage.offline or stage.runtime is None or not stage.primary):
@@ -353,19 +357,19 @@ def families(stage: Stage) -> None:
                 [{
                     "role": "user",
                     "content": (
-                        "SEAL uses you for question generation, evaluation, and critique. "
-                        "In two sentences, why is one Sonnet model enough for all three?"
+                        "This service uses one Sonnet model for chat, classification, and summaries. "
+                        "In two sentences, when would you switch to Haiku instead?"
                     ),
                 }],
                 "Be brief and concrete.",
                 max_tokens=160,
                 temperature=0.2,
             )
-            stage.meter.add(turn.usage, "seal-model")
+            stage.meter.add(turn.usage, "one-model")
             stage.out.print(Panel(turn.text, title=stage.primary, border_style="green"))
             stage.out.print(f"[dim]{usage_line(turn.usage, turn.stop_reason)}[/dim]")
 
-        stage.guard("SEAL model", _one_job)
+        stage.guard("One model", _one_job)
         return
 
     if stage.offline or stage.runtime is None or not stage.primary:
@@ -411,5 +415,5 @@ ACTS = [
     ("stream", "Streaming", streaming),
     ("tools", "Tools, the agent loop", tools),
     ("structured", "Structured output", structured),
-    ("families", "SEAL's one model", families),
+    ("families", "One model id", families),
 ]

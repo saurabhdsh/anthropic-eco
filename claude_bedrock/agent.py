@@ -1,4 +1,4 @@
-"""The agent loop on the same Messages API SEAL uses.
+"""The agent loop on the Bedrock Messages API.
 
 Claude returns a tool_use block. We run the function. We send a tool_result.
 Claude writes the answer.

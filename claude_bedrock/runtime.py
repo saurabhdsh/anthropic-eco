@@ -1,10 +1,9 @@
-"""Messages API on Bedrock, the same call SEAL's BedrockProvider makes.
+"""Messages API on Bedrock.
 
-SEAL (TypeScript):
-    new AnthropicBedrock({ awsRegion })
+    AnthropicBedrock(aws_region=...)
     client.messages.create({ model, max_tokens, system, messages })
 
-This module is that call in Python. The EC2 role supplies the credentials.
+The EC2 instance role supplies the credentials.
 """
 
 from __future__ import annotations
@@ -57,7 +56,7 @@ def client(region: str):
     from anthropic import AnthropicBedrock
 
     # No access key. AnthropicBedrock uses the default AWS chain, which on
-    # this EC2 is WeaveEC2BedrockRole — the same chain SEAL uses.
+    # this EC2 is the instance role.
     return AnthropicBedrock(aws_region=region)
 
 
@@ -76,23 +75,22 @@ def explain_error(exc: Exception) -> str:
     hints = {
         "AccessDeniedException": (
             "The instance role cannot invoke this model. "
-            "SEAL's role is WeaveEC2BedrockRole. Attach iam/bedrock-session-policy.json if this caller is missing bedrock:InvokeModel."
+            "Attach iam/bedrock-session-policy.json if this caller is missing bedrock:InvokeModel."
         ),
         "PermissionDeniedError": (
-            "Bedrock refused this role. Confirm the instance profile is WeaveEC2BedrockRole, "
-            "the same one SEAL's API uses."
+            "Bedrock refused this role. Confirm the instance profile can call Claude in this region."
         ),
         "NotFoundError": (
-            "This model id is not in the region. SEAL uses "
+            "This model id is not in the region. Use "
             "us.anthropic.claude-sonnet-4-5-20250929-v1:0 in us-east-1."
         ),
         "ValidationException": (
-            "Bedrock rejected the model id. Set BEDROCK_MODEL_ID to the SEAL id: "
+            "Bedrock rejected the model id. Set BEDROCK_MODEL_ID to "
             "us.anthropic.claude-sonnet-4-5-20250929-v1:0."
         ),
         "NoCredentialsError": (
-            "This process has no AWS credentials. Run it on the SEAL EC2, "
-            "where WeaveEC2BedrockRole is the instance profile."
+            "This process has no AWS credentials. Run it on the EC2 instance "
+            "whose profile can call Bedrock."
         ),
     }
     hint = hints.get(code, "")
